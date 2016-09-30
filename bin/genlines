@@ -1,0 +1,98 @@
+#!perl
+
+# DATE
+# VERSION
+
+#IFBUILT
+use strict;
+use warnings;
+#END IFBUILT
+
+use Getopt::Long;
+use Time::HiRes qw(time sleep);
+
+my %Opts = (
+    min_speed => 20,
+    max_speed => 30,
+);
+
+sub _calc_delay {
+    1 / (rand()*($Opts{max_speed} - $Opts{min_speed}) + $Opts{min_speed});
+}
+
+sub parse_cmdline {
+    my $res = GetOptions(
+        'min-speed=i'   => \$Opts{min_speed},
+        'max-speed=i'   => \$Opts{max_speed},
+        'version|v'     => sub {
+            no warnings;
+            say "genlines version $main::VERSION ($main::DATE)";
+            exit 0;
+        },
+        'help|h'        => sub {
+            print <<USAGE;
+Usage:
+  genlines [OPTIONS]...
+  genlines --version, -v
+  genlines --help, -h
+Options:
+  --min-speed=i
+  --max-speed=i
+For more details, see the manpage/documentation.
+USAGE
+            exit 0;
+        },
+    );
+    exit 99 if !$res;
+}
+
+sub run {
+    $|++;
+
+    my $delay = _calc_delay();
+    my $last_speed_change_time = time();
+
+    my $i = 1;
+    while (1) {
+        print $i++, "\n";
+        sleep $delay;
+        my $time = time();
+        if ($time - $last_speed_change_time > 5) {
+            $delay = _calc_delay();
+            $last_speed_change_time = $time;
+        }
+    }
+}
+
+# MAIN
+
+parse_cmdline();
+run();
+
+1;
+# ABSTRACT: Produce lines with a specified speed range
+# PODNAME:
+
+=head1 SYNOPSIS
+
+ % genlines --min-speed 20 --max-speed 30
+
+
+=head1 DESCRIPTION
+
+
+=head1 OPTIONS
+
+
+=head1 TODO
+
+Option to take lines from input.
+
+Option to change the speed change parameter.
+
+
+=head1 SEE ALSO
+
+L<linespeed>
+
+=cut
