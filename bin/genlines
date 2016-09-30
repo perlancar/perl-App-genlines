@@ -3,10 +3,8 @@
 # DATE
 # VERSION
 
-#IFBUILT
 use strict;
 use warnings;
-#END IFBUILT
 
 use Getopt::Long;
 use Time::HiRes qw(time sleep);
