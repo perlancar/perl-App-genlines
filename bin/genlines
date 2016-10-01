@@ -3,6 +3,7 @@
 # DATE
 # VERSION
 
+use 5.010001;
 use strict;
 use warnings;
 
@@ -10,21 +11,46 @@ use Getopt::Long;
 use Time::HiRes qw(time sleep);
 
 my %Opts = (
-    min_speed => 20,
-    max_speed => 30,
+    speed => 10,
+    min_speed => undef,
+    max_speed => undef,
+    change_speed_every => 5,
+    max_change_speed_every => undef,
+    min_change_speed_every => undef,
 );
 
 sub _calc_delay {
-    1 / (rand()*($Opts{max_speed} - $Opts{min_speed}) + $Opts{min_speed});
+    my $s0  = $Opts{speed};
+    my $min = $Opts{min_speed};
+    my $max = $Opts{max_speed};
+    $min //= $max; $max //= $min;
+
+    my $s = defined($min) ? rand($max-$min)+$min : $s0;
+
+    die "Cannot set speed to 0\n" if $s == 0;
+    1 / $s;
+}
+
+sub _calc_change_speed_every {
+    my $e0  = $Opts{change_speed_every};
+    my $min = $Opts{min_change_speed_every};
+    my $max = $Opts{max_change_speed_every};
+    $min //= $max; $max //= $min;
+
+    defined($min) ? rand($max-$min)+$min : $e0;
 }
 
 sub parse_cmdline {
     my $res = GetOptions(
-        'min-speed=i'   => \$Opts{min_speed},
-        'max-speed=i'   => \$Opts{max_speed},
+        'speed=f'                  => \$Opts{speed},
+        'min-speed=f'              => \$Opts{min_speed},
+        'max-speed=f'              => \$Opts{max_speed},
+        'change-speed-every=f'     => \$Opts{change_speed_every},
+        'min-change-speed-every=f' => \$Opts{min_change_speed_every},
+        'max-change-speed-every=f' => \$Opts{max_change_speed_every},
         'version|v'     => sub {
             no warnings;
-            say "genlines version $main::VERSION ($main::DATE)";
+            print "genlines version $main::VERSION ($main::DATE)\n";
             exit 0;
         },
         'help|h'        => sub {
@@ -34,8 +60,11 @@ Usage:
   genlines --version, -v
   genlines --help, -h
 Options:
-  --min-speed=i
-  --max-speed=i
+  --min-speed=f
+  --max-speed=f
+  --change-speed-every=f
+  --min-change-speed-every=f
+  --max-change-speed-every=f
 For more details, see the manpage/documentation.
 USAGE
             exit 0;
@@ -50,14 +79,17 @@ sub run {
     my $delay = _calc_delay();
     my $last_speed_change_time = time();
 
+    my $change_speed_every = _calc_change_speed_every();
+
     my $i = 1;
     while (1) {
         print $i++, "\n";
         sleep $delay;
         my $time = time();
-        if ($time - $last_speed_change_time > 5) {
+        if ($time - $last_speed_change_time > $change_speed_every) {
             $delay = _calc_delay();
             $last_speed_change_time = $time;
+            $change_speed_every = _calc_change_speed_every();
         }
     }
 }
@@ -73,7 +105,24 @@ run();
 
 =head1 SYNOPSIS
 
+Generate 10 lines per second (default):
+
+ % genlines
+
+Generate 100 lines per second:
+
+ % genlines --speed 100
+
+Generate between 20 to 30 lines per second. Speed will change (but still be in
+the 20-30 lines/sec range) every 5 seconds (default):
+
  % genlines --min-speed 20 --max-speed 30
+
+Generate between 0.1 to 10 lines per second. Change speed after between 3 to 10
+seconds.
+
+ % genlines --min-speed 0.1 --max-speed 10 \
+     --min-change-speed-every 3 --max-change-speed-every 10
 
 
 =head1 DESCRIPTION
@@ -81,12 +130,36 @@ run();
 
 =head1 OPTIONS
 
+=head2 --speed (num, default: 10)
+
+=head2 --min-speed (num)
+
+If this is specified instead of C<--speed>, will set speed to a random number
+between C<--min-speed> and C<--max-speed>.
+
+=head2 --max-speed (num)
+
+If this is specified instead of C<--speed>, will set speed to a random number
+between C<--min-speed> and C<--max-speed>.
+
+=head2 --change-speed-every (num, default: 5)
+
+=head2 --min-change-speed-every (num)
+
+If this is specified instead of C<--change-speed-every>, will change speed after
+a random number of seconds between C<--min-change-speed-every> and
+C<--max-change-speed-every>.
+
+=head2 --max-change-speed-every (num)
+
+If this is specified instead of C<--change-speed-every>, will change speed after
+a random number of seconds between C<--min-change-speed-every> and
+C<--max-change-speed-every>.
+
 
 =head1 TODO
 
-Option to take lines from input.
-
-Option to change the speed change parameter.
+Option to take lines from input or customize lines.
 
 
 =head1 SEE ALSO
