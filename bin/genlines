@@ -7,7 +7,7 @@ use 5.010001;
 use strict;
 use warnings;
 
-use Getopt::Long;
+use Getopt::Long::Complete;
 use Time::HiRes qw(time sleep);
 
 my %Opts = (
