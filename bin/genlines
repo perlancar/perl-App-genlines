@@ -195,4 +195,8 @@ Option to take lines from input or customize lines.
 
 L<linespeed>
 
+cstream, L<http://www.cons.org/cracauer/cstream.html>
+
+throttle, L<http://klicman.org/throttle/>
+
 =cut
