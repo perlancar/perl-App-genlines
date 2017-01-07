@@ -1,5 +1,3 @@
-Revision history for App-genlines
-
 0.003   2016-10-01 (PERLANCAR)
 
 	- Tweak algorithm: avoid lots of sleep() with small value (<
